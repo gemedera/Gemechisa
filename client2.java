@@ -9,11 +9,11 @@
 import java.io.*;
 import java.net.*;
 
-public class Gutu {
+public class client2 {
     private Socket socket;
     private BufferedWriter out;
 
-    public Gutu(String serverAddress, int port) {
+    public client2(String serverAddress, int port) {
         try {
             socket = new Socket(serverAddress, port);
             System.out.println("Gutu is connected.");
@@ -59,6 +59,7 @@ public class Gutu {
     }
 
     public static void main(String[] args) {
-        new Gutu("localhost", 1234);
+        new client2("localhost", 1234);
     }
 }
+
