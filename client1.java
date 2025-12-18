@@ -7,11 +7,11 @@
 import java.io.*;
 import java.net.*;
 
-public class Gemechisa {
+public class client1 {
     private Socket socket;
     private BufferedWriter out;
 
-    public Gemechisa(String serverAddress, int port) {
+    public client1(String serverAddress, int port) {
         try {
             socket = new Socket(serverAddress, port);
             System.out.println("Gemechisa is connected.");
@@ -57,7 +57,7 @@ public class Gemechisa {
     }
 
     public static void main(String[] args) {
-        new Gemechisa("localhost", 1234);
+        new client1("localhost", 1234);
     }
 }
 
@@ -80,3 +80,4 @@ class IncomingMessageHandler implements Runnable {
         }
     }
 }
+
