@@ -4,80 +4,92 @@
 // Group : 5
 
 
+import javax.swing.*;
+import java.awt.*;
 import java.io.*;
 import java.net.*;
 
-public class client1 {
+public class Client1GUI {
+
     private Socket socket;
     private BufferedWriter out;
+    private BufferedReader in;
 
-    public client1(String serverAddress, int port) {
+    private JFrame frame;
+    private JTextArea chatArea;
+    private JTextField messageField;
+    private JButton sendButton;
+
+    public Client1GUI(String serverAddress, int port) {
         try {
             socket = new Socket(serverAddress, port);
             System.out.println("Gemechisa is connected.");
 
             out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-            // Start a thread to listen for incoming messages
-            new Thread(new IncomingMessageHandler(socket)).start();
+            createGUI();
+            startListening();
 
-            // Allow sending messages
-            sendMessageLoop();
         } catch (IOException e) {
-            System.err.println("Could not connect to server: " + e.getMessage());
+            JOptionPane.showMessageDialog(null, "Connection failed");
         }
     }
 
-    private void sendMessageLoop() {
-        BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in));
-        String message;
+    private void createGUI() {
+        frame = new JFrame("Client 1 - Gemechisa");
+        chatArea = new JTextArea();
+        chatArea.setEditable(false);
+
+        messageField = new JTextField();
+        sendButton = new JButton("Send");
+
+        sendButton.addActionListener(e -> sendMessage());
+
+        JPanel bottomPanel = new JPanel(new BorderLayout());
+        bottomPanel.add(messageField, BorderLayout.CENTER);
+        bottomPanel.add(sendButton, BorderLayout.EAST);
+
+        frame.setLayout(new BorderLayout());
+        frame.add(new JScrollPane(chatArea), BorderLayout.CENTER);
+        frame.add(bottomPanel, BorderLayout.SOUTH);
+
+        frame.setSize(400, 400);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setVisible(true);
+    }
+
+    private void sendMessage() {
         try {
-            while ((message = userInput.readLine()) != null) {
-                out.write(message);
-                out.newLine();
-                out.flush();
-                if (message.equalsIgnoreCase("Bye")) {
-                    break;
+            String message = "Gemechisa: " + messageField.getText();
+            out.write(message);
+            out.newLine();
+            out.flush();
+
+            chatArea.append(message + "\n");
+            messageField.setText("");
+
+        } catch (IOException e) {
+            chatArea.append("Message not sent\n");
+        }
+    }
+
+    private void startListening() {
+        new Thread(() -> {
+            try {
+                String msg;
+                while ((msg = in.readLine()) != null) {
+                    chatArea.append(msg + "\n");
                 }
+            } catch (IOException e) {
+                chatArea.append("Connection closed\n");
             }
-        } catch (IOException e) {
-            System.err.println("Error sending message: " + e.getMessage());
-        } finally {
-            cleanup();
-        }
-    }
-
-    private void cleanup() {
-        try {
-            if (out != null) out.close();
-            if (socket != null) socket.close();
-        } catch (IOException e) {
-            System.err.println("Error closing resources: " + e.getMessage());
-        }
+        }).start();
     }
 
     public static void main(String[] args) {
-        new client1("localhost", 1234);
+        new Client1GUI("localhost", 1234);
     }
 }
 
-class IncomingMessageHandler implements Runnable {
-    private Socket socket;
-
-    public IncomingMessageHandler(Socket socket) {
-        this.socket = socket;
-    }
-
-    @Override
-    public void run() {
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
-            String incomingMessage;
-            while ((incomingMessage = in.readLine()) != null) {
-                System.out.println("received: " + incomingMessage);
-            }
-        } catch (IOException e) {
-            System.err.println("Error reading message: " + e.getMessage());
-        }
-    }
-}
 
